@@ -1,5 +1,4 @@
 #include "TimeTools.h"
-#include "Debug.h"
 
 unsigned int TimeTools::_UdpPort = 2390;
 const int TimeTools::_NTP_PACKET_SIZE = 48;
@@ -10,7 +9,7 @@ WiFiUDP TimeTools::_udp;
 
 unsigned long TimeTools::sendNTPpacket(IPAddress &address)
 {
-    debug.Println("\nTIME: sending NTP packet...");
+    Serial.println("\nTIME: sending NTP packet...");
     // set all bytes in the buffer to 0
     memset(_packetBuffer, 0, _NTP_PACKET_SIZE);
     // Initialize values needed to form NTP request
@@ -45,9 +44,9 @@ time_t TimeTools::getNtpTime()
 
         int cb = _udp.parsePacket();
         if (!cb) {
-            debug.Println("TIME: no packet yet");
+            Serial.println("TIME: no packet yet");
         } else {
-            debug.Printf("TIME: packet received, length=%d\n", cb);
+            Serial.printf("TIME: packet received, length=%d\n", cb);
             // We've received a packet, read the data from it
             _udp.read(_packetBuffer, _NTP_PACKET_SIZE); // read the packet into the buffer
 
@@ -61,26 +60,26 @@ time_t TimeTools::getNtpTime()
             time_t unixTime = (highWord << 16 | lowWord) - 2208988800;
             if ( month( unixTime ) >= 3 && month( unixTime ) < 11 ) {
                 unixTime += 3600;
-                debug.Println("TIME: Adjusted +1hr for DST");
+                Serial.println("TIME: Adjusted +1hr for DST");
             }
             setTime(unixTime);
             return unixTime;
         }
     }
-    debug.Println("TIME: Failed to get time");
+    Serial.println("TIME: Failed to get time");
     return 0;
 }
 
 void TimeTools::setup()
 {
     _udp.begin(_UdpPort);
-    debug.Printf("TIME: UDP server started port : %d\n", _udp.localPort());
+    Serial.printf("TIME: UDP server started port : %d\n", _udp.localPort());
 
     setSyncProvider(getNtpTime);
     setSyncInterval(86400);
 
     if (timeStatus() == timeNotSet) {
-        debug.Println("TIME: Was not set :( \n\n");
+        Serial.println("TIME: Was not set :( \n\n");
     } else {
         printTimeln();
     }
@@ -90,20 +89,20 @@ void TimeTools::printTime()
 {
     if (timeStatus() == timeNotSet)   return;
 
-    debug.Printf("TIME: %s:%s:%s - %d/%d/%d",
+    Serial.printf("TIME: %s:%s:%s - %d/%d/%d",
         printDigits(hour()).c_str(),
         printDigits(minute()).c_str(),
         printDigits(second()).c_str(),
         day(), month(), year());
 
-    // debug.Print( "TIME: ",printDigits(hour()),printDigits(minute()),printDigits(second()));
-    // debug.Printf(" - %d/%d/%d", day(), month(), year());
+    // Serial.print( "TIME: ",printDigits(hour()),printDigits(minute()),printDigits(second()));
+    // Serial.printf(" - %d/%d/%d", day(), month(), year());
 }
 
 void TimeTools::printTimeln()
 {
     printTime();
-    debug.Print("\n");
+    Serial.print("\n");
 }
 
 String TimeTools::printDigits(int digits)
@@ -118,3 +117,4 @@ String TimeTools::printDigits(int digits)
 }
 
 TimeTools timeTools;
+
